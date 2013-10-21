@@ -1,6 +1,7 @@
-*.class
-
-# Package Files #
-*.jar
-*.war
-*.ear
+# don't expose source data files
+*.txt
+*.csv
+*.tsv
+*.png
+*.xls
+*.xlsx
