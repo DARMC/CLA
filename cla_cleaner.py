@@ -6,8 +6,8 @@ import math
 import shapefile_functions as sfuncs
 
 def write_output(movements):
-    with open('attrib_table_test.csv', 'w') as outf:
-        wr = ucsv.writer(outf, delimiter='\t')
+    with open('denorm_test.csv', 'w') as outf:
+        wr = ucsv.writer(outf, delimiter=',')
         for movement in movements:
             wr.writerow(movement)
 
@@ -98,8 +98,7 @@ if __name__ == '__main__':
             for mvmt in mvmts:
                 if len(mvmts) > 0:
                     movements.append(mvmt)
-    for m in movements:
-        if m[8] == '89.5': m[8] = m[8].replace('89.5','89')
+
     movements.insert(0, headers)
     write_output(movements)
     print 'Runtime: {0:.4}'.format(time.time() - start)
