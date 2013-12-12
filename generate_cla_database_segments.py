@@ -37,7 +37,7 @@ def denormalize_dataset(raw_data):
 
 def write_output(final_data):
     """Write line segments to CSV file"""
-    with open('manuscript_movements.csv', 'w') as outf:
+    with open('denorm_test.csv', 'w') as outf:
         wr = ucsv.writer(outf, delimiter=',')
         for movement in final_data:
             wr.writerow(movement) 
