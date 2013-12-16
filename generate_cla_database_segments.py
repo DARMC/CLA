@@ -1,11 +1,11 @@
 import time
 import unicodecsv as ucsv
+import sys
 
 ## Functions
 def read_manuscript_points(infile):
     """Return raw data array from csv file"""
-    with open(infile,'rU') as inf:
-        return [line for line in ucsv.reader(inf)]
+    return [line for line in ucsv.reader(open(infile,'rU'))]
 
 def denormalize_dataset(raw_data):
     """Return one manuscript point per line"""
@@ -13,14 +13,14 @@ def denormalize_dataset(raw_data):
     denormalized_data = []
     for row in raw_data:
         # put place copied
-        place_copied = [row[0] , row[57], row[58], row[60], 
-                        row[59], row[68], row[61], row[62], 
-                        row[69], row[70], '', '']
+        place_copied = [row[0] , row[27], row[28], row[30], 
+                        row[29], row[38], row[31], row[32], 
+                        row[39], row[40], '', '']
 
         denormalized_data.append(place_copied)
         
         # put in intermediate stages
-        for x in xrange(76, len(row), 12):
+        for x in xrange(46, len(row), 12):
             constr = []
             constr.append(row[0])
             for item in row[x:x+11]:
@@ -35,18 +35,15 @@ def denormalize_dataset(raw_data):
 
     return denormalized_data
 
-def write_output(final_data):
+def write_output(final_data, outfile):
     """Write line segments to CSV file"""
-    with open('denorm_test.csv', 'w') as outf:
-        wr = ucsv.writer(outf, delimiter=',')
-        for movement in final_data:
-            wr.writerow(movement) 
+    with open(outfile, 'w') as outf:
+        wr = ucsv.writer(outf).writerows(final_data)
 
 def write_wkt_geometry(database):
 	for idx, row in enumerate(database):
 		if idx == 0: row.append('WKT')
 		else: row.append('LINESTRING({0} {1}, {2} {3})'.format(row[7], row[6], row[19], row[18]))
-
 	return database
 
 ## Classes
@@ -60,6 +57,7 @@ class Manuscript(object):
         return 'Processing CLA ID {0}'.format(self.uid)
 
     def parse_manuscript_record(self):
+        #for row in self.data: print row[0], row[8]
         self.data.sort(key = lambda row:row[8])
         for x in xrange(0, len(self.data)-1):
             seg = self.data[x] + self.data[x+1]
@@ -71,10 +69,15 @@ class Manuscript(object):
 if __name__ == '__main__':
     start = time.time()
 
+    if len(sys.argv) < 3:
+        sys.exit('USAGE: generate_cla_database_segments.py <infile> <outfile>')
     # read in data
-    raw_data = read_manuscript_points('cla_volume_1.csv')[1:]
+    
+    print '>> Reading CLA Spreadsheet'
+    raw_data = read_manuscript_points(sys.argv[1])[1:]
     
     # denormalize
+    print '>> Denormalizing CLA Data'
     denormalized_data = denormalize_dataset(raw_data) 
 
     # create database of MS movements
@@ -88,9 +91,8 @@ if __name__ == '__main__':
     # exclude rows without two coordinate pairs
     valid_data = [x for x in denormalized_data if x[6] != '' and x[7] != '']
     
-    # all data with a rel code
-    #valid_data = [x for x in denormalized_data if x[5] != '']
     ms_movements = []
+    print '>> Parsing Manuscript Records'
     for ms in set([x[0] for x in valid_data]):
         m = Manuscript([p for p in valid_data if p[0] == ms], ms)
         if m.parse_manuscript_record():
@@ -99,6 +101,8 @@ if __name__ == '__main__':
 
     # add headers and write CSV file
     ms_movements.insert(0, headers)
+    print '>> Creating WKT Geometries'
     ms_movements = write_wkt_geometry(ms_movements)
-    write_output(ms_movements)
+    print '>> Writing output file'
+    write_output(ms_movements, sys.argv[2])
     print 'Runtime: {0:.4}'.format(time.time() - start)
