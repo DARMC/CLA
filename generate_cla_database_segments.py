@@ -1,38 +1,69 @@
 import time
 import unicodecsv as ucsv
 import sys
+import glob
+import os
 
-## Functions
-def read_manuscript_points(infile):
+def import_csv(infile):
     """Return raw data array from csv file"""
     return [line for line in ucsv.reader(open(infile,'rU'))]
 
-def denormalize_dataset(raw_data):
+def write_unique_points(d, inf_name):
+    def is_in(existing, c):
+        match = False
+        if len(existing) > 0:
+            for r in existing:
+                if r[0] == c[0] and r[1] == c[1] and r[2] == c[2]:
+                    match = True
+        return match
+    
+    def make_wkt_point(lng, lat):
+        """Returns a WKT point for given input strings - no validation"""
+        return ['POINT({0} {1})'.format(lng, lat)]
+
+    with open(inf_name+'_nodes.csv','w') as outf:
+        writer = ucsv.writer(outf)
+        writer.writerow(['ID','Library or Archive','City or Region','Country','Centroid','Latitude','Longitude','WKT String'])
+        # create WKT geometry
+        data_to_write = [row[1:5] + row[7:9] + make_wkt_point(row[8], row[7]) for row in d if row[8] != '' and row[7] != '']
+        
+        unique_rows = []
+        for row in data_to_write:
+            if not is_in(unique_rows, row):
+                unique_rows.append(row)
+        
+        for idx, row in enumerate(unique_rows):
+            row.insert(0, str(idx))
+        writer.writerows(unique_rows)  
+
+def denormalize_dataset(raw_data, inf_name):
     """Return one manuscript point per line"""
     # denormalize rows
     denormalized_data = []
+    # MSID, Place 1, Place 2, Place 3, Centroid, Certainty, Relation, 
+    #Lat, Long, Ord, Comment
     for row in raw_data:
-        # put place copied
-        place_copied = [row[0] , row[27], row[28], row[30], 
-                        row[29], row[38], row[31], row[32], 
-                        row[39], row[40], '', '']
-
+    #place2  place2.1    place2.2    pl2-centr   pl2-q   rel2    declat2 declong2    ord-pl2 text2   place2-startdate    place2-enddate  comment2
+        place_copied = [row[0] , row[28], row[29], row[30], 
+        row[32], row[31], row[40], row[33], row[34], row[41],
+        '','','']
         denormalized_data.append(place_copied)
         
         # put in intermediate stages
-        for x in xrange(46, len(row), 12):
+        for x in xrange(48, len(row), 13):
             constr = []
             constr.append(row[0])
-            for item in row[x:x+11]:
+            for item in row[x:x+12]:
                 constr.append(item)
             denormalized_data.append(constr)
 
         # put current library
-        current_library = [row[0], row[4], row[3], '', 
-                           '', 'Current', row[5], row[6], row[7],
-                           '', row[13], row[14] ]
+        current_library = [row[0], row[3],row[4],row[5],'','','Current',
+        row[6],row[7],row[8],'','','']
         denormalized_data.append(current_library)
 
+    write_unique_points(denormalized_data, inf_name)
+    # return dataset
     return denormalized_data
 
 def write_output(final_data, outfile):
@@ -40,11 +71,11 @@ def write_output(final_data, outfile):
     with open(outfile, 'w') as outf:
         wr = ucsv.writer(outf).writerows(final_data)
 
-def write_wkt_geometry(database):
-	for idx, row in enumerate(database):
-		if idx == 0: row.append('WKT')
-		else: row.append('LINESTRING({0} {1}, {2} {3})'.format(row[7], row[6], row[19], row[18]))
-	return database
+def add_wkt_lines(database):
+    for idx, row in enumerate(database):
+        if idx == 0: row.append('WKT')
+        else: row.append('LINESTRING({0} {1}, {2} {3})'.format(row[8], row[7], row[21], row[20]))
+    return database
 
 ## Classes
 class Manuscript(object):
@@ -58,38 +89,66 @@ class Manuscript(object):
 
     def parse_manuscript_record(self):
         #for row in self.data: print row[0], row[8]
-        self.data.sort(key = lambda row:row[8])
-        for x in xrange(0, len(self.data)-1):
-            seg = self.data[x] + self.data[x+1]
-            self.segments.append(seg)
+        self.data.sort(key = lambda row:row[9])
+
+        # find first point-event that isn't coded 'd' or 'f'
+        i = 0
+        while self.data[i][6] in ['d','f']:
+            i += 1
+        last_ok_point = self.data[i]
+        
+        for x in xrange(0, len(self.data)):
+            if self.data[x] != last_ok_point:
+                if self.data[x][6] in ['d','f']:
+                    seg = self.data[x] + last_ok_point
+                else:
+                    seg = last_ok_point + self.data[x]
+                    last_ok_point = self.data[x]
+                # let the last ok point jump if it wasnt a d or f rel code
+                #if self.data[x][5] not in ['d','f']:
+                 #   last_ok_point = self.data[x+1]
+
+                self.segments.append(seg)
         # return bool to evaluate whether there are valid segments
         return True if len(self.segments) > 0 else False
 
 ## Main
-if __name__ == '__main__':
-    start = time.time()
-
-    if len(sys.argv) < 3:
-        sys.exit('USAGE: generate_cla_database_segments.py <infile> <outfile>')
-    # read in data
-    
-    print '>> Reading CLA Spreadsheet'
-    raw_data = read_manuscript_points(sys.argv[1])[1:]
-    
-    # denormalize
+def process_cla_volume(infile):
+    print '>> Reading CLA Spreadsheet: {0}'.format(infile)
+    raw_data = import_csv(infile)[1:]
     print '>> Denormalizing CLA Data'
-    denormalized_data = denormalize_dataset(raw_data) 
+    denormalized_data = denormalize_dataset(raw_data, infile[:-4]) 
 
-    # create database of MS movements
-    headers = ['FR_MISD', 'FR_N', 'FR_REG', 'FR_CENT',
-               'FR_CERT', 'FR_RLXN', 'FR_LAT', 'FR_LONG', 
-               'FR_ORD', 'FR_COMMENT', 'FR_ST', 'FR_END',
-               'TO_MISD', 'TO_N', 'TO_REG', 'TO_CENT', 
-               'TO_CERT', 'TO_RLXN', 'TO_LAT', 'TO_LONG',
-               'TO_ORD', 'TO_COMMENT', 'TO_ST', 'TO_END']
+    headers = ['FR_MSID', 
+               'FR_Library',
+               'FR_City',
+               'FR_Country', 
+               'FR_Centroid',
+               'FR_Certainty',
+               'FR_Relation',    
+               'FR_Latitude', 
+               'FR_Longitude', 
+               'FR_Order',  
+               'FR_Comment', 
+               'FR_Start',
+               'FR_End',
+               'TO_MSID', 
+               'TO_Library',
+               'TO_City',
+               'TO_Country', 
+               'TO_Centroid',
+               'TO_Certainty',
+               'TO_Relation',    
+               'TO_Latitude', 
+               'TO_Longitude', 
+               'TO_Order',  
+               'TO_Comment', 
+               'TO_Start',
+               'TO_End',
+]
     
     # exclude rows without two coordinate pairs
-    valid_data = [x for x in denormalized_data if x[6] != '' and x[7] != '']
+    valid_data = [x for x in denormalized_data if x[7] != '' and x[8] != '']
     
     ms_movements = []
     print '>> Parsing Manuscript Records'
@@ -102,7 +161,12 @@ if __name__ == '__main__':
     # add headers and write CSV file
     ms_movements.insert(0, headers)
     print '>> Creating WKT Geometries'
-    ms_movements = write_wkt_geometry(ms_movements)
+    ms_movements = add_wkt_lines(ms_movements)
     print '>> Writing output file'
-    write_output(ms_movements, sys.argv[2])
+    write_output(ms_movements, infile[:-4]+'_movements.csv')
+
+if __name__ == '__main__':
+    start = time.time()    
+    for fname in glob.glob(os.path.join('cla_volume_?.csv')):
+        process_cla_volume(fname)
     print 'Runtime: {0:.4}'.format(time.time() - start)

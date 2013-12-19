@@ -13,6 +13,7 @@
 *.qgs
 *.png
 *.tsv
+*.qml
 
 
 # Compiled source #
