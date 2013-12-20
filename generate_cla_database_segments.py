@@ -29,7 +29,7 @@ def write_unique_points(d, inf_name):
         
         unique_rows = []
         for row in data_to_write:
-            if not is_in(unique_rows, row):
+            if not row in unique_rows:
                 unique_rows.append(row)
         
         for idx, row in enumerate(unique_rows):
