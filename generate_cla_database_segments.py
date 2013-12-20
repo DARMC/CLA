@@ -29,11 +29,12 @@ def write_unique_points(d, inf_name):
         
         unique_rows = []
         for row in data_to_write:
-            if not row in unique_rows:
+            if not is_in(unique_rows,row):
                 unique_rows.append(row)
         
         for idx, row in enumerate(unique_rows):
             row.insert(0, str(idx))
+        
         writer.writerows(unique_rows)  
 
 def denormalize_dataset(raw_data, inf_name):
