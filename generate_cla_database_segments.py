@@ -21,7 +21,7 @@ def write_unique_points(d, inf_name):
         """Returns a WKT point for given input strings - no validation"""
         return ['POINT({0} {1})'.format(lng, lat)]
 
-    with open(inf_name+'_nodes.csv','w') as outf:
+    with open('Nodes/'+inf_name+'_nodes.csv','w') as outf:
         writer = ucsv.writer(outf)
         writer.writerow(['ID','Library or Archive','City or Region','Country','Centroid','Latitude','Longitude','WKT String'])
         # create WKT geometry
@@ -59,8 +59,8 @@ def denormalize_dataset(raw_data, inf_name):
             denormalized_data.append(constr)
 
         # put current library
-        current_library = [row[0], row[3],row[4],row[5],'','','Current',
-        row[6],row[7],row[8],'','','']
+        current_library = [row[0], row[3], row[4], row[5], '', '', 
+        'Current', row[6], row[7], row[8], '', '', '']
         denormalized_data.append(current_library)
 
     write_unique_points(denormalized_data, inf_name)
@@ -70,12 +70,14 @@ def denormalize_dataset(raw_data, inf_name):
 def write_output(final_data, outfile):
     """Write line segments to CSV file"""
     with open(outfile, 'w') as outf:
-        wr = ucsv.writer(outf).writerows(final_data)
+        ucsv.writer(outf).writerows(final_data)
 
 def add_wkt_lines(database):
     for idx, row in enumerate(database):
-        if idx == 0: row.append('WKT')
-        else: row.append('LINESTRING({0} {1}, {2} {3})'.format(row[8], row[7], row[21], row[20]))
+        if idx == 0:
+            row.append('WKT')
+        else: 
+            row.append('LINESTRING({0} {1}, {2} {3})'.format(row[8], row[7], row[21], row[20]))
     return database
 
 ## Classes
@@ -113,11 +115,10 @@ class Manuscript(object):
         # return bool to evaluate whether there are valid segments
         return True if len(self.segments) > 0 else False
 
-## Main
 def process_cla_volume(infile):
-    print '>> Reading CLA Spreadsheet: {0}'.format(infile)
+    print '\n>> Reading CLA Spreadsheet: {0}'.format(infile)
     raw_data = import_csv(infile)[1:]
-    print '>> Denormalizing CLA Data'
+    print '>> Denormalizing dataset'
     denormalized_data = denormalize_dataset(raw_data, infile[:-4]) 
 
     headers = ['FR_MSID', 
@@ -164,10 +165,15 @@ def process_cla_volume(infile):
     print '>> Creating WKT Geometries'
     ms_movements = add_wkt_lines(ms_movements)
     print '>> Writing output file'
-    write_output(ms_movements, infile[:-4]+'_movements.csv')
+    write_output(ms_movements, 'Movements/'+infile[:-4]+'_movements.csv')
 
 if __name__ == '__main__':
+    if not os.path.isdir('Movements'):
+        os.mkdir('Movements')
+    if not os.path.isdir('Nodes'):
+        os.mkdir('Nodes')
+
     start = time.time()    
     for fname in glob.glob(os.path.join('cla_volume_?.csv')):
         process_cla_volume(fname)
-    print 'Runtime: {0:.4}'.format(time.time() - start)
+    print '\n'
