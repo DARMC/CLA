@@ -25,7 +25,7 @@ def find_node_id(place, node_table):
             return [row[0]]
 
 if __name__ == '__main__':
-    # Import nodes
+    # Import nodes from all files
     node_files = glob.glob(os.path.join('Nodes/cla_volume_?_nodes.csv'))
     print '\n>> Importing nodes from {0} files...'.format(len(node_files)),
     all_nodes = []
