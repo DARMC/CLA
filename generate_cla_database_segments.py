@@ -13,7 +13,7 @@ def write_unique_points(d, inf_name):
         match = False
         if len(existing) > 0:
             for r in existing:
-                if r[0] == c[0] and r[1] == c[1] and r[2] == c[2]:
+                if r[0:3] == c[0:3]:
                     match = True
         return match
     
@@ -21,7 +21,7 @@ def write_unique_points(d, inf_name):
         """Returns a WKT point for given input strings - no validation"""
         return ['POINT({0} {1})'.format(lng, lat)]
 
-    with open('Nodes/'+inf_name+'_nodes.csv','w') as outf:
+    with open(os.path.join('Nodes', inf_name+'_nodes.csv'),'w') as outf:
         writer = ucsv.writer(outf)
         writer.writerow(['ID','Library or Archive','City or Region','Country','Centroid','Latitude','Longitude','WKT String'])
         # create WKT geometry
@@ -102,14 +102,11 @@ class Manuscript(object):
         
         for x in xrange(0, len(self.data)):
             if self.data[x] != last_ok_point:
-                if self.data[x][6] in ['d','f']:
+                if self.data[x][6] in ['d','f','m']:
                     seg = self.data[x] + last_ok_point
                 else:
                     seg = last_ok_point + self.data[x]
                     last_ok_point = self.data[x]
-                # let the last ok point jump if it wasnt a d or f rel code
-                #if self.data[x][5] not in ['d','f']:
-                 #   last_ok_point = self.data[x+1]
 
                 self.segments.append(seg)
         # return bool to evaluate whether there are valid segments
@@ -165,7 +162,7 @@ def process_cla_volume(infile):
     print '>> Creating WKT Geometries'
     ms_movements = add_wkt_lines(ms_movements)
     print '>> Writing output file'
-    write_output(ms_movements, 'Movements/'+infile[:-4]+'_movements.csv')
+    write_output(ms_movements, os.path.join('Movements', infile[:-4]+'_movements.csv'))
 
 if __name__ == '__main__':
     if not os.path.isdir('Movements'):
