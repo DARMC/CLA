@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     # Write out node table
     print '>> Writing Complete Node Table'
-    with open('all_nodes.csv','w') as outf:
+    with open('Nodes/all_nodes.csv','w') as outf:
         writer = csv.writer(outf)
         writer.writerow(['ID', 'Library or Archive', 'City or Region', \
             'Country','Centroid','Latitude','Longitude','WKT String'])
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     # Write out edge table
     print '>> Writing Complete Edge Table\n'
-    with open('all_edges.csv','w') as outf:
+    with open('Edges/all_edges.csv','w') as outf:
         writer = csv.writer(outf)
         writer.writerow(['Source', 'Target', 'Fr Place1', 'Fr Place2', \
             'Fr Place 3','To Place1','To Place2','To Place 3','Edge UID'])
