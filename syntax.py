@@ -11,5 +11,21 @@ MAKE_NODE_TABLE = '''
 	)
 	'''
 
-MAKE_EDGE_TABLE = ''' * '''
+MAKE_EDGE_TABLE = '''
+	CREATE TABLE IF NOT EXISTS edges (
+		[From Node ID]
+		[To Node ID]
+
+	) 
+	'''
+
+MAKE_ATTRIBUTE_TABLE = '''
+	CREATE TABLE IF NOT EXISTS attributes (
+	)
+	'''
+
+MAKE_COMPLETE_TABLE = '''
+	CREATE TABLE IF NOT EXISTS complete (
+	)
+	'''
 

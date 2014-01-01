@@ -1,9 +1,11 @@
-import unicodecsv as csv
-import os
 import glob
+import os
+import unicodecsv as csv
 
 def import_file(infile, mode = False):
-    """ Return data from edge and node files """
+    """
+    Return data from edge and node csv files as a list.
+    """
     with open(infile, 'r') as inf:
         if mode == 'Node':
             return [line[1:] for line in csv.reader(inf)][1:]
@@ -11,15 +13,17 @@ def import_file(infile, mode = False):
             return[line[2:8] for line in csv.reader(inf)][1:]
 
 def remove_duplicate_nodes(nodes):
-    """ Preserve only unique rows """
-    unique_nodes = []
-    for n in nodes: 
-        if n not in unique_nodes:
-            unique_nodes.append(n)
-    return unique_nodes
+    """
+    Preserve only unique rows. 
+    """
+    return list(set(nodes))
 
 def find_node_id(place, node_table):
-    """ Get node ID using name, not coordinates """
+    """
+    Return the ID of the node that matches <place>. If more than one matching 
+    node existsm, it will return the first one, but this indicates a larger 
+    problem with the implementation and should not occur in practice.
+    """
     for row in node_table:
         if row[1:4] == place:
             return [row[0]]
