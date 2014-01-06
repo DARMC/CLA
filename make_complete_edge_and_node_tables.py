@@ -16,7 +16,10 @@ def remove_duplicate_nodes(nodes):
     """
     Preserve only unique rows. 
     """
-    return list(set(nodes))
+    immutable_nodes = [tuple(node) for node in nodes]
+    nodeset = set(immutable_nodes)
+    nodelist = [list(node) for node in nodeset]
+    return nodelist
 
 def find_node_id(place, node_table):
     """
