@@ -113,9 +113,9 @@ class Manuscript(object):
         return True if len(self.segments) > 0 else False
 
 def process_cla_volume(infile):
-    print '\n>> Reading CLA Spreadsheet: {0}'.format(infile)
+    print '>> Processing CLA Spreadsheet: {0}'.format(infile)
     raw_data = import_csv(infile)[1:]
-    print '>> Denormalizing dataset'
+    #print '>> Denormalizing dataset'
     denormalized_data = denormalize_dataset(raw_data, infile[:-4]) 
 
     headers = ['FR_MSID', 
@@ -150,7 +150,7 @@ def process_cla_volume(infile):
     valid_data = [x for x in denormalized_data if x[7] != '' and x[8] != '']
     
     ms_movements = []
-    print '>> Parsing Manuscript Records'
+    #print '>> Parsing Manuscript Records'
     for ms in set([x[0] for x in valid_data]):
         m = Manuscript([p for p in valid_data if p[0] == ms], ms)
         if m.parse_manuscript_record():
@@ -159,9 +159,9 @@ def process_cla_volume(infile):
 
     # add headers and write CSV file
     ms_movements.insert(0, headers)
-    print '>> Creating WKT Geometries'
+    #print '>> Creating WKT Geometries'
     ms_movements = add_wkt_lines(ms_movements)
-    print '>> Writing output file'
+    #print '>> Writing output file'
     write_output(ms_movements, os.path.join('Movements', infile[:-4]+'_movements.csv'))
 
 if __name__ == '__main__':
@@ -171,6 +171,6 @@ if __name__ == '__main__':
         os.mkdir('Nodes')
 
     start = time.time()    
-    for fname in glob.glob(os.path.join('cla_volume_?.csv')):
+    for fname in glob.glob(os.path.join('cla_volume_[0-1][0-9].csv')):
         process_cla_volume(fname)
     print '\n'

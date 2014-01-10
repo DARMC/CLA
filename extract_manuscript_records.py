@@ -30,7 +30,8 @@ def extract_from_sqlite_db(database, target_manuscripts):
 
         # extract manuscripts
         for manuscript in target_manuscripts:
-            c.execute('''SELECT * FROM complete_records WHERE [MSID] >= ? AND [MSID] >= ?''',(manuscript, manuscript+1))
+            c.execute('''SELECT * FROM complete_records WHERE [MSID] >= ? 
+                         AND [MSID] >= ?''', (manuscript, manuscript+1))
             extracted_rows += c.fetchall()
 
     return extracted_rows

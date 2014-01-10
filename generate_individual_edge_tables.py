@@ -3,8 +3,8 @@ import os
 
 def pair_exists(i):
     """ Check of both required files are in directory """
-    nodes = os.path.exists('Nodes/cla_volume_{0}_nodes.csv'.format(str(i)))
-    movements = os.path.exists('Movements/cla_volume_{0}_movements.csv'.format(str(i)))
+    nodes = os.path.exists('Nodes/cla_volume_{0:02d}_nodes.csv'.format(i))
+    movements = os.path.exists('Movements/cla_volume_{0:02d}_movements.csv'.format(i))
     return True if nodes and movements else False
 
 def find_node_uid(candidate_node, node_database):
@@ -20,9 +20,9 @@ if __name__ == '__main__':
     for x in xrange(1, 12):
         if pair_exists(x):
             # Get input data
-            nodefile = 'Nodes/cla_volume_{0}_nodes.csv'.format(str(x))
+            nodefile = 'Nodes/cla_volume_{0:02d}_nodes.csv'.format(x)
             nodes = load(nodefile)
-            movementfile = 'Movements/cla_volume_{0}_movements.csv'.format(str(x))
+            movementfile = 'Movements/cla_volume_{0:02d}_movements.csv'.format(x)
             segments = load(movementfile)       
 
             # Create edge table
@@ -38,7 +38,7 @@ if __name__ == '__main__':
                 edge_table.append(tmp_edge)
 
             # Write output file
-            outfilename = 'cla_volume_{0}_edges.csv'.format(str(x))
+            outfilename = 'cla_volume_{0:02d}_edges.csv'.format(x)
             
             with open('Edges/'+outfilename, 'wb') as outf:
                 writer = csv.writer(outf)
@@ -47,7 +47,7 @@ if __name__ == '__main__':
                                  'To Place 3', 'WKT String', 'Edge UID'])
                 writer.writerows(edge_table)
             
-            print 'Generated edge table for CLA {0}'.format(str(x))
+            print '>> Generated edge table for CLA {0}'.format(str(x))
         
         else:
             #print 'Required files not found for CLA {0}'.format(str(x))
