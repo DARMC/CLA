@@ -3,19 +3,12 @@ CLA
 
 0. Setup
 ------------
-Everything in the CLA project is pretty modular (read: disorganized), and so there isn't a great deal to build, set up, or 'install' in any sense of the word. As of last count, the complete list of python dependencies for this project is as follows:
+In addition to standard Python libraries, the CLA project depends heavily on the ```unicodecsv``` module, a drop in replacement for the standard ```csv``` module. Although the script will not fail to run without unicodecsv installed (it will crash down to the standard ```csv``` module), unicode handling will be unpredictable, and it is frankly unlikely that it will run successfully. For any of the relational database elements of this project, a working sqlite installation and the ```sqlite3``` module are required.
 
-Stuff you already have:
-os
-glob
-unicodecsv
-sys
-time
+1. Data processing
+----------------
+Download the formatted CLA spreadsheets from the DARMC Google Drive in the format ```cla_volume_XX.csv``` into the main project directory. Once all volumes are downloaded, execute ```$ python process_raw_cla_data.py```
 
-Stuff you don't:
-unicodecsv
-sqlite3
 
-If you don't already have a working sqlite build on your machine, go make that happen. It's not too complicated on Mac and other unix systems. I hear it can be kind of a pain on Windows systems, but I've never tried. Don't rule out running a simple Ubuntu box under emulation to save yourself the hassle.
-
-Before you do anything else, just run ```$ set_up_sqlite_database.py``` in your project directory. That will create 
+2. Query Utility
+----------------
