@@ -68,7 +68,7 @@ def set_up_attributes_table(c):
         [palaeographical links] TEXT, [to do] TEXT)''')
 
 def populate_attribute_table(c, conn):
-    for filename in glob.glob('cla_volume_?.csv'):
+    for filename in glob.glob('cla_volume_[0-1][0-9].csv'):
         with open(filename, 'rU') as inf:
             rows = [row[0:48] for row in csv.reader(inf)][1:]
             
@@ -77,11 +77,13 @@ def populate_attribute_table(c, conn):
                 ?,?,?,?,?,?)''', rows)
             conn.commit()
 
+
 if __name__ == '__main__':
     # don't overwrite existing versions of the database
     if os.path.isfile('cla.sqlite'):
-        sys.exit('''>> Database is already set up. \n>> Delete or rename an old 
-                    version if you want to rewrite it.''')
+        os.remove('cla.sqlite')
+        #sys.exit('''>> Database is already set up. \n>> Delete or rename an old 
+                    #version if you want to rewrite it.''')
     
     # create database and connect to it
     conn = sqlite.connect('cla.sqlite')
