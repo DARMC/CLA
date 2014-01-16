@@ -13,4 +13,4 @@ if __name__ == '__main__':
 	print 'Runtime: {0:.3f} seconds'.format(time() - start)
 	subprocess.call('python condense_node_table.py', shell = True)
 	print 'Runtime: {0:.3f} seconds'.format(time() - start)
-	# subprocess.call('python set_up_sqlite_database.py')
+	subprocess.call('python set_up_sqlite_database.py', shell= True)

@@ -25,7 +25,15 @@ def write_unique_points(d, inf_name):
         writer = ucsv.writer(outf)
         writer.writerow(['ID','Library or Archive','City or Region','Country','Centroid','Latitude','Longitude','WKT String'])
         # create WKT geometry
-        data_to_write = [row[1:5] + row[7:9] + make_wkt_point(row[8], row[7]) for row in d if row[8] != '' and row[7] != '']
+        data_to_write = []
+        for row in d:
+            if len(row) != 13: print row
+            if row[8] != '' and row[7] != '':
+                rmod = row[1:5] + row[7:9] + make_wkt_point(row[8], row[7])
+                
+                data_to_write.append(rmod)
+
+        #data_to_write = [row[1:5] + row[7:9] + make_wkt_point(row[8], row[7]) for row in d if row[8] != '' and row[7] != '']
         
         unique_rows = []
         for row in data_to_write:
@@ -51,7 +59,7 @@ def denormalize_dataset(raw_data, inf_name):
         denormalized_data.append(place_copied)
         
         # put in intermediate stages
-        for x in xrange(48, len(row), 13):
+        for x in xrange(49, len(row), 13):
             constr = []
             constr.append(row[0])
             for item in row[x:x+12]:
@@ -96,10 +104,14 @@ class Manuscript(object):
 
         # find first point-event that isn't coded 'd' or 'f'
         i = 0
-        while self.data[i][6] in ['d','f']:
-            i += 1
-        last_ok_point = self.data[i]
-        
+        try:
+            while self.data[i][6] in ['d','f','m']:
+                i += 1
+            last_ok_point = self.data[i]
+        # if no point not coded d or f is found
+        except IndexError:
+            return False
+
         for x in xrange(0, len(self.data)):
             if self.data[x] != last_ok_point:
                 if self.data[x][6] in ['d','f','m']:
