@@ -5,8 +5,33 @@ import glob
 import os
 
 def import_csv(infile):
-    """Return raw data array from csv file"""
+    """
+    Return raw data array from csv file
+    """
     return [line for line in ucsv.reader(open(infile,'rU'))]
+
+def import_excel(infile):
+    """
+    Return raw data arraw from excel file
+    """
+    import xlrd
+    data = []
+    workbook = xlrd.open_workbook(infile)
+    worksheet = workbook.sheet_by_name('CLA')
+    num_rows = worksheet.nrows - 1
+    num_cells = worksheet.ncols - 1
+    curr_row = -1
+    while curr_row < num_rows:
+        row_data = []
+        curr_row += 1
+        row = worksheet.row(curr_row)
+        curr_cell = -1
+        while curr_cell < num_cells:
+            curr_cell += 1
+            row_data.append(worksheet.cell_value(curr_row, curr_cell))
+        data.append(row_data)
+        #print len(row_data)
+    return data
 
 def write_unique_points(d, inf_name):
     def is_in(existing, c):
@@ -18,7 +43,9 @@ def write_unique_points(d, inf_name):
         return match
     
     def make_wkt_point(lng, lat):
-        """Returns a WKT point for given input strings - no validation"""
+        """
+        Returns a WKT point for given input strings - no validation
+        """
         return ['POINT({0} {1})'.format(lng, lat)]
 
     with open(os.path.join('Nodes', inf_name+'_nodes.csv'),'w') as outf:
@@ -27,7 +54,8 @@ def write_unique_points(d, inf_name):
         # create WKT geometry
         data_to_write = []
         for row in d:
-            if len(row) != 13: print row
+            print row
+            #if len(row) != 13: print row
             if row[8] != '' and row[7] != '':
                 rmod = row[1:5] + row[7:9] + make_wkt_point(row[8], row[7])
                 
@@ -78,7 +106,7 @@ def denormalize_dataset(raw_data, inf_name):
 def write_output(final_data, outfile):
     """Write line segments to CSV file"""
     with open(outfile, 'w') as outf:
-        ucsv.writer(outf).writerows(final_data)
+        ucsv.writer(outf, encoding = 'UTF-8').writerows(final_data)
 
 def add_wkt_lines(database):
     for idx, row in enumerate(database):
@@ -126,7 +154,8 @@ class Manuscript(object):
 
 def process_cla_volume(infile):
     print '>> Processing CLA Spreadsheet: {0}'.format(infile)
-    raw_data = import_csv(infile)[1:]
+    #raw_data = import_csv(infile)[1:]
+    raw_data = import_excel(infile)[1:]
     #print '>> Denormalizing dataset'
     denormalized_data = denormalize_dataset(raw_data, infile[:-4]) 
 
@@ -183,6 +212,7 @@ if __name__ == '__main__':
         os.mkdir('Nodes')
 
     start = time.time()    
-    for fname in glob.glob(os.path.join('cla_volume_[0-1][0-9].csv')):
+    #for fname in glob.glob(os.path.join('cla_volume_[0-1][0-9].csv')):
+    for fname in glob.glob(os.path.join('complete_cla_copy.xls')):
         process_cla_volume(fname)
     print '\n'
