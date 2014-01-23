@@ -5,7 +5,6 @@ import sys
 import glob
 import os
 
-# OK
 def import_csv(infile):
     """
     Return raw data array from csv file
@@ -38,6 +37,7 @@ def write_unique_points(d, inf_name):
         return match
 
     with open(os.path.join(inf_name+' Points.csv'),'w') as outf:
+        print '>> Writing Unique Points...',
         writer = csv.writer(outf)
         writer.writerow(['ID','Library or Archive','City or Region','Country',
                          'Centroid Type', 'Latitude', 'Longitude', 'WKT String'])
@@ -49,24 +49,26 @@ def write_unique_points(d, inf_name):
                 data_to_write.append(node_line)
         unique_rows = []
 
-
         for row in data_to_write:
             if not is_in(unique_rows,row):
                 unique_rows.append(row)
         for idx, row in enumerate(unique_rows):
             row.insert(0, str(idx))
         writer.writerows(unique_rows)  
+        print 'Got {0} points'.format(len(unique_rows))
 
 def write_all_points(denormalized_data):
+    print '>> Writing All Manuscript-Points...',
     with open('all_points.csv','w') as outf:
-      writer2 = csv.writer(outf)
-      writer2.writerow([
-        'ID', 'Library or Archive', 'City or Region', 'Country',
-        'Centroid Type', 'Certainty', 'Blank?', 'Relation', 'Latitude', 'Longitude', 'Order',
-        'Text', 'Start Date', 'End Date', 'Date Q', 'Date Literal', 'Notes', 'WKT String'])
-      full_rows = [d for d in denormalized if d[8]!= '' and d[9] != '']
-      for f in full_rows:
-        writer2.writerow(f + 'POINT({0} {1})'.format(f[9], f[8]))
+        writer = csv.writer(outf)
+        writer.writerow(['ID', 'Library or Archive', 'City or Region', 
+            'Country', 'Centroid Type', 'Certainty', 'Blank?', 'Relation', 
+            'Latitude', 'Longitude', 'Order', 'Text', 'Start Date', 'End Date', 
+            'Date Q', 'Date Literal', 'Notes', 'WKT String'])
+        full_rows = [d for d in denormalized if d[8]!= '' and d[9] != '']
+        for row in full_rows:
+            writer.writerow(f + 'POINT({0} {1})'.format(f[9], f[8]))
+    print 'Got {0} total points'.format(len(full_rows))
 
 def denormalize_dataset(raw_data, inf_name):
     """
@@ -157,47 +159,20 @@ def process_cla_volume(infile, mode = 'csv'):
     #print '>> Denormalizing dataset'
     denormalized_data = denormalize_dataset(raw_data, infile[:-5]) 
     #for d in denormalized_data: print len(d)
-    headers = ['FR_MSID', 
-               'FR_Library',
-               'FR_City',
-               'FR_Country', 
-               'FR_Centroid',
-               'FR_Certainty',
-               'FR_Context',
-               'FR_Relation',    
-               'FR_Latitude', 
-               'FR_Longitude', 
-               'FR_Order',  
-               'FR_Text', 
-               'FR_Start',
-               'FR_End',
-               'FR_DateQ',
-               'FR_DateLit',
-               'FR_Comment',
-               'TO_MSID', 
-               'TO_Library',
-               'TO_City',
-               'TO_Country', 
-               'TO_Centroid',
-               'TO_Certainty',
-               'TO_Context',
-               'TO_Relation',    
-               'TO_Latitude', 
-               'TO_Longitude', 
-               'TO_Order',  
-               'TO_Text', 
-               'TO_Start',
-               'TO_End',
-               'TO_DateQ',
-               'TO_DateLit',
-               'TO_Comment'
-               ]
+    headers = ['FR_MSID', 'FR_Library', 'FR_City', 'FR_Country', 'FR_Centroid',
+               'FR_Certainty', 'FR_Context', 'FR_Relation', 'FR_Latitude', 
+               'FR_Longitude', 'FR_Order', 'FR_Text', 'FR_Start', 'FR_End',
+               'FR_DateQ', 'FR_DateLit', 'FR_Comment', 'TO_MSID', 'TO_Library',
+               'TO_City', 'TO_Country', 'TO_Centroid', 'TO_Certainty',
+               'TO_Context', 'TO_Relation', 'TO_Latitude', 'TO_Longitude', 
+               'TO_Order', 'TO_Text', 'TO_Start', 'TO_End', 'TO_DateQ',
+               'TO_DateLit', 'TO_Comment']
     
     # exclude rows without two coordinate pairs
     valid_data = [x for x in denormalized_data if x[8] != '' and x[9] != '']
     
     ms_movements = []
-    #print '>> Parsing Manuscript Records'
+    print '>> Parsing Manuscript Records...',
     for ms in set([x[0] for x in valid_data]):
         #print ms
         m = Manuscript([p for p in valid_data if p[0] == ms], ms)
@@ -205,13 +180,13 @@ def process_cla_volume(infile, mode = 'csv'):
             for segment in m.segments:
                 #print segment
                 ms_movements.append(segment)
-
+    print 'COMPLETED'
     # add headers and write CSV file
     ms_movements.insert(0, headers)
-    #print '>> Creating WKT Geometries'
     ms_movements = add_wkt_lines(ms_movements)
-    #print '>> Writing output file'
+    print '>> Writing Manuscript Movement File...',
     write_output(ms_movements, os.path.join(infile[:-5]+'_movements.csv'))
+    print 'COMPLETED'
 
 if __name__ == '__main__':
     start = time.time()    
