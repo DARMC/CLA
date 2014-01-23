@@ -58,3 +58,9 @@ Thumbs.db
 *.ini
 
 *.gephi
+
+*.cpg
+
+*.qpj
+
+*.xml

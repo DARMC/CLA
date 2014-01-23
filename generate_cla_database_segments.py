@@ -16,19 +16,18 @@ def import_excel(infile):
     """
     Return raw data arraw from excel file
     """
-    print '>> Importing data from file: {0}'.format(infile)
+    print '>> Importing data from \'{0}\'...'.format(infile),
     workbook = xlrd.open_workbook(infile)
     ws = workbook.sheet_by_name('Complete CLA')
     complete_cla_data = []
     for i in xrange(ws.nrows):
         row_data = []
         for j in xrange(ws.ncols):
-            row_data.append(ws.cell_value(i, j))
+            row_data.append(unicode(ws.cell_value(i, j)))
         complete_cla_data.append(row_data)
-    print '>> Read {0} records'.format(len(complete_cla_data))
+    print 'Read {0} records'.format(len(complete_cla_data))
     return complete_cla_data
 
-# TODO
 def write_unique_points(d, inf_name):
     def is_in(existing, c):
         match = False
@@ -49,6 +48,8 @@ def write_unique_points(d, inf_name):
                 node_line = row[1:5] + row[8:10] + wkt_point
                 data_to_write.append(node_line)
         unique_rows = []
+
+
         for row in data_to_write:
             if not is_in(unique_rows,row):
                 unique_rows.append(row)
@@ -56,19 +57,32 @@ def write_unique_points(d, inf_name):
             row.insert(0, str(idx))
         writer.writerows(unique_rows)  
 
+def write_all_points(denormalized_data):
+    with open('all_points.csv','w') as outf:
+      writer2 = csv.writer(outf)
+      writer2.writerow([
+        'ID', 'Library or Archive', 'City or Region', 'Country',
+        'Centroid Type', 'Certainty', 'Blank?', 'Relation', 'Latitude', 'Longitude', 'Order',
+        'Text', 'Start Date', 'End Date', 'Date Q', 'Date Literal', 'Notes', 'WKT String'])
+      full_rows = [d for d in denormalized if d[8]!= '' and d[9] != '']
+      for f in full_rows:
+        writer2.writerow(f + 'POINT({0} {1})'.format(f[9], f[8]))
+
 def denormalize_dataset(raw_data, inf_name):
-    """Return one manuscript point per line"""
+    """
+    Return one manuscript point per line.
+    """
     # denormalize rows
     denormalized_data = []
     for row in raw_data:
         # add place copied
-        place_copied = [row[1], row[35], row[36], row[37], row[39], row[38],
-                        row[48], row[49], row[40], row[41], row[50], '',
+        place_copied = [row[1], row[36], row[37], row[38], row[40], row[39],
+                        row[49], row[50], row[41], row[42], row[51], '',
                         row[16], row[17], '', '', '']
         denormalized_data.append(place_copied)
 
         # put in intermediate stages
-        for x in xrange(57, len(row), 16):
+        for x in xrange(58, len(row), 16):
             constr = []
             constr.append(row[1])
             for item in row[x:x+16]:
@@ -82,24 +96,22 @@ def denormalize_dataset(raw_data, inf_name):
         denormalized_data.append(current_library)
 
     write_unique_points(denormalized_data, inf_name)
-    # return dataset
+    denorm_copy = denormalized_data[:]
+    #write_all_points(list(denorm_copy))
     return denormalized_data
+
 
 def write_output(final_data, outfile):
     """
     Write line segments to CSV file
     """
     with open(outfile, 'w') as outf:
-        csv.writer(outf, delimiter = ',', encoding = 'UTF-8').writerows(final_data)
+        csv.writer(outf).writerows(final_data)
 
-# TOFIX
 def add_wkt_lines(database):
-    for idx, row in enumerate(database):
-        if idx == 0:
-            row.append('WKT')
-        else:
-            #print row 
-            row.append('LINESTRING({0} {1}, {2} {3})'.format(row[9], row[8], row[27], row[26]))
+    database[0].append('WKT')
+    for row in database[1:]:
+        row.append('LINESTRING({0} {1}, {2} {3})'.format(row[9], row[8], row[26], row[25]))
     return database
 
 ## Classes
@@ -115,8 +127,6 @@ class Manuscript(object):
     def parse_manuscript_record(self):
         #for row in self.data: print row[0], row[8]
         self.data.sort(key = lambda row:row[9])
-        #print self.data
-        #sys.exit()
         # find first point-event that isn't coded 'd' or 'f' or 'm'
         i = 0
         try:
@@ -139,8 +149,7 @@ class Manuscript(object):
         # return bool to evaluate whether there are valid segments
         return True if len(self.segments) > 0 else False
 
-def process_cla_volume(infile, mode = 'excel'):
-    print '>> Processing CLA Spreadsheet: {0}'.format(infile)
+def process_cla_volume(infile, mode = 'csv'):
     if mode == 'csv':
         raw_data = import_csv(infile)[1:]
     elif mode == 'excel':
@@ -206,6 +215,5 @@ def process_cla_volume(infile, mode = 'excel'):
 
 if __name__ == '__main__':
     start = time.time()    
-    #for fname in glob.glob(os.path.join('cla_volume_[0-1][0-9].csv')):
     for fname in glob.glob(os.path.join('Complete CLA Database.xlsx')):
         process_cla_volume(fname, mode = 'excel')

@@ -26,6 +26,7 @@ if __name__ == '__main__':
     movementfile = 'Complete CLA Database_movements.csv'
     nodefile = 'Complete CLA Database Points.csv'
     if pair_exists(nodefile, movementfile):
+        print '>> Generating Edge Table...',
         nodes = load(nodefile)
         segments = load(movementfile)       
 
@@ -37,7 +38,7 @@ if __name__ == '__main__':
             source = find_node_uid(from_node_data, nodes)
             to_node_data = segment[18:21]
             target = find_node_uid(to_node_data, nodes)
-            tmp_edge = [source, target] + from_node_data + to_node_data + [segment[26], str(i)]
+            tmp_edge = [source, target] + from_node_data + to_node_data + [segment[-1], str(i)]
             # add output to edge table
             edge_table.append(tmp_edge)
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
                              'To Place 3', 'WKT String', 'Edge UID'])
             writer.writerows(edge_table)
         
-        print '>> Generated edge table for CLA'
+        print 'COMPLETED'
         
     else:
         print 'Required files not found'
