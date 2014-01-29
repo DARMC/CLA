@@ -65,9 +65,9 @@ def write_all_points(denormalized_data):
             'Country', 'Centroid Type', 'Certainty', 'Blank?', 'Relation', 
             'Latitude', 'Longitude', 'Order', 'Text', 'Start Date', 'End Date', 
             'Date Q', 'Date Literal', 'Notes', 'WKT String'])
-        full_rows = [d for d in denormalized if d[8]!= '' and d[9] != '']
+        full_rows = [d for d in denormalized_data if d[8]!= '' and d[9] != '']
         for row in full_rows:
-            writer.writerow(f + 'POINT({0} {1})'.format(f[9], f[8]))
+            writer.writerow(row + ['POINT({0} {1})'.format(row[9], row[8])])
     print 'Got {0} total points'.format(len(full_rows))
 
 def denormalize_dataset(raw_data, inf_name):
@@ -80,7 +80,7 @@ def denormalize_dataset(raw_data, inf_name):
         # add place copied
         place_copied = [row[1], row[36], row[37], row[38], row[40], row[39],
                         row[49], row[50], row[41], row[42], row[51], '',
-                        row[16], row[17], '', '', '']
+                        row[17], row[18], '', '','']
         denormalized_data.append(place_copied)
 
         # put in intermediate stages
@@ -101,7 +101,6 @@ def denormalize_dataset(raw_data, inf_name):
     denorm_copy = denormalized_data[:]
     #write_all_points(list(denorm_copy))
     return denormalized_data
-
 
 def write_output(final_data, outfile):
     """
@@ -127,8 +126,8 @@ class Manuscript(object):
         return 'Processing CLA ID {0}'.format(self.uid)
 
     def parse_manuscript_record(self):
-        #for row in self.data: print row[0], row[8]
-        self.data.sort(key = lambda row:row[9])
+        #for row in self.data: print row[0], row[8]f
+        self.data.sort(key = lambda row:row[10])
         # find first point-event that isn't coded 'd' or 'f' or 'm'
         i = 0
         try:
@@ -184,6 +183,7 @@ def process_cla_volume(infile, mode = 'csv'):
     # add headers and write CSV file
     ms_movements.insert(0, headers)
     ms_movements = add_wkt_lines(ms_movements)
+    write_all_points(denormalized_data)
     print '>> Writing Manuscript Movement File...',
     write_output(ms_movements, os.path.join(infile[:-5]+'_movements.csv'))
     print 'COMPLETED'
