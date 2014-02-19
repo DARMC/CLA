@@ -7,4 +7,5 @@ if __name__ == '__main__':
 	print 'Runtime: {0:.3f} seconds'.format(time() - start)
 	subprocess.call('python generate_edge_table.py', shell = True)
 	print 'Runtime: {0:.3f} seconds'.format(time() - start)
-	
+	subprocess.call('python set_up_sqlite_database.py', shell = True)
+	print 'Runtime: {0:.3f} seconds'.format(time() - start)

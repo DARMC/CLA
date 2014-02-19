@@ -35,7 +35,7 @@ def set_up_edge_table(c):
     c.execute('''CREATE TABLE IF NOT EXISTS edges ([source] INTEGER, 
         [target] INTEGER, [From Library or Archive] TEXT, [From City] TEXT, 
         [From Country] TEXT, [To Library or Archive] TEXT, [To City] TEXT, 
-        [To Country] TEXT, [Edge ID] INTEGER)''')
+        [To Country] TEXT, [WKT String] TEXT, [Edge ID] INTEGER)''')
 
 def populate_edge_table(c, conn, edge_file):
     """
@@ -44,7 +44,7 @@ def populate_edge_table(c, conn, edge_file):
     with open(edge_file, 'rU') as inf:
         edges = [row for row in csv.reader(inf)][1:]
 
-    c.executemany('''INSERT INTO edges VALUES (?,?,?,?,?,?,?,?,?)''', edges)
+    c.executemany('''INSERT INTO edges VALUES (?,?,?,?,?,?,?,?,?,?)''', edges)
     conn.commit()
 
 def set_up_attributes_table(c):
@@ -92,11 +92,11 @@ if __name__ == '__main__':
     # set up nodes
     print '>> Creating edge and node tables'
     set_up_node_table(c)
-    populate_node_table(c, conn, 'Nodes/all_nodes.csv')
+    populate_node_table(c, conn, 'Complete CLA Database Points.csv')
     
     # set up edges
     set_up_edge_table(c)
-    populate_edge_table(c, conn, 'Edges/all_edges.csv')
+    populate_edge_table(c, conn, 'cla_edges.csv')
 
     # set up MS attribute table
     print '>> Creating manuscript attributes table'

@@ -65,7 +65,7 @@ def write_all_points(denormalized_data):
             'Country', 'Centroid Type', 'Certainty', 'Blank?', 'Relation', 
             'Latitude', 'Longitude', 'Order', 'Text', 'Start Date', 'End Date', 
             'Date Q', 'Date Literal', 'Notes', 'WKT String'])
-        full_rows = [d for d in denormalized_data if d[8]!= '' and d[9] != '']
+        full_rows = [[field[0:254] for field in d] for d in denormalized_data if d[8]!= '' and d[9] != '']
         for row in full_rows:
             writer.writerow(row + ['POINT({0} {1})'.format(row[9], row[8])])
     print 'Got {0} total points'.format(len(full_rows))
@@ -108,6 +108,13 @@ def write_output(final_data, outfile):
     """
     with open(outfile, 'w') as outf:
         csv.writer(outf).writerows(final_data)
+
+def write_truncated_output(final_data, outfile):
+    """
+    Write line segments to CSV file
+    """
+    with open(outfile, 'w') as outf:
+        csv.writer(outf).writerows([[item[0:254] for item in row] for row in final_data])
 
 def add_wkt_lines(database):
     database[0].append('WKT')
@@ -156,7 +163,7 @@ def process_cla_volume(infile, mode = 'csv'):
     elif mode == 'excel':
         raw_data = import_excel(infile)[1:]
     #print '>> Denormalizing dataset'
-    denormalized_data = denormalize_dataset(raw_data, infile[:-5]) 
+    denormalized_data = denormalize_dataset(raw_data, infile[:-4]) 
     #for d in denormalized_data: print len(d)
     headers = ['FR_MSID', 'FR_Library', 'FR_City', 'FR_Country', 'FR_Centroid',
                'FR_Certainty', 'FR_Context', 'FR_Relation', 'FR_Latitude', 
@@ -185,10 +192,10 @@ def process_cla_volume(infile, mode = 'csv'):
     ms_movements = add_wkt_lines(ms_movements)
     write_all_points(denormalized_data)
     print '>> Writing Manuscript Movement File...',
-    write_output(ms_movements, os.path.join(infile[:-5]+'_movements.csv'))
+    write_truncated_output(ms_movements, os.path.join(infile[:-4]+'_movements.csv'))
     print 'COMPLETED'
 
 if __name__ == '__main__':
     start = time.time()    
-    for fname in glob.glob(os.path.join('Complete CLA Database.xlsx')):
-        process_cla_volume(fname, mode = 'excel')
+    for fname in glob.glob(os.path.join('Complete CLA Database.csv')):
+        process_cla_volume(fname, mode = 'csv')
