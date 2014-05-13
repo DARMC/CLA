@@ -1,33 +1,27 @@
 import time
 import unicodecsv as csv
-import xlrd
 import sys
 import glob
 import os
 
 def import_csv(infile):
     """
-    Return raw data array from csv file
-    """
-    return [line for line in csv.reader(open(infile,'rU'))]
+    Return raw data array from csv file.
 
-def import_excel(infile):
+    Parameters
+    ----------
+    infile : name of csv file to read.
     """
-    Return raw data arraw from excel file
-    """
-    print '>> Importing data from \'{0}\'...'.format(infile),
-    workbook = xlrd.open_workbook(infile)
-    ws = workbook.sheet_by_name('Complete CLA')
-    complete_cla_data = []
-    for i in xrange(ws.nrows):
-        row_data = []
-        for j in xrange(ws.ncols):
-            row_data.append(unicode(ws.cell_value(i, j)))
-        complete_cla_data.append(row_data)
-    print 'Read {0} records'.format(len(complete_cla_data))
-    return complete_cla_data
+    if not os.path.isfile(infile):
+        sys.exit('>> No input file named {} found'.format(infile))
+    else:
+        return [line for line in csv.reader(open(infile,'rU'))]
 
 def write_unique_points(d, inf_name):
+    """
+    
+    """
+
     def is_in(existing, c):
         match = False
         if len(existing) > 0:
@@ -50,7 +44,7 @@ def write_unique_points(d, inf_name):
         unique_rows = []
 
         for row in data_to_write:
-            if not is_in(unique_rows,row):
+            if not is_in(unique_rows, row):
                 unique_rows.append(row)
         for idx, row in enumerate(unique_rows):
             row.insert(0, str(idx))
@@ -58,6 +52,15 @@ def write_unique_points(d, inf_name):
         print 'Got {0} points'.format(len(unique_rows))
 
 def write_all_points(denormalized_data):
+    """
+    Write a complete list of points attested for all manuscripts,
+    including one row for each MS-place (i.e. points are not spatially
+    unique) where a Lat/Long pair have been identified.
+
+    Parameters
+    ----------
+    denormalized_data : 
+    """
     print '>> Writing All Manuscript-Points...',
     with open('all_points.csv','w') as outf:
         writer = csv.writer(outf)
@@ -187,6 +190,7 @@ def process_cla_volume(infile, mode = 'csv'):
                 #print segment
                 ms_movements.append(segment)
     print 'COMPLETED'
+
     # add headers and write CSV file
     ms_movements.insert(0, headers)
     ms_movements = add_wkt_lines(ms_movements)
@@ -196,6 +200,4 @@ def process_cla_volume(infile, mode = 'csv'):
     print 'COMPLETED'
 
 if __name__ == '__main__':
-    start = time.time()    
-    for fname in glob.glob(os.path.join('Complete CLA Database.csv')):
-        process_cla_volume(fname, mode = 'csv')
+    process_cla_volume('Complete CLA Database.csv', mode = 'csv')

@@ -82,8 +82,6 @@ if __name__ == '__main__':
     # don't overwrite existing versions of the database
     if os.path.isfile('cla.sqlite'):
         os.remove('cla.sqlite')
-        #sys.exit('''>> Database is already set up. \n>> Delete or rename an old 
-                    #version if you want to rewrite it.''')
     
     # create database and connect to it
     conn = sqlite.connect('cla.sqlite')
