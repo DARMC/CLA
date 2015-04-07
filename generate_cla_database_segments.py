@@ -15,7 +15,7 @@ def import_csv(infile):
     if not os.path.isfile(infile):
         sys.exit('>> No input file named {} found'.format(infile))
     else:
-        return [line for line in csv.reader(open(infile,'rU'))]
+        return [line for line in csv.reader(open(infile,'rU'), delimiter='\t')]
 
 def write_unique_points(d, inf_name):
     """
@@ -37,10 +37,17 @@ def write_unique_points(d, inf_name):
                          'Centroid Type', 'Latitude', 'Longitude', 'WKT String'])
         data_to_write = []
         for row in d:
-            if row[8] != '' and row[9] != '':
-                wkt_point = ['POINT({0} {1})'.format(row[9], row[8])]
-                node_line = row[1:5] + row[8:10] + wkt_point
-                data_to_write.append(node_line)
+            #print len(row)
+            try:
+                if row[8] != '' and row[9] != '':
+                    wkt_point = ['POINT({0} {1})'.format(row[9], row[8])]
+                    node_line = row[1:5] + row[8:10] + wkt_point
+                    data_to_write.append(node_line)
+            except IndexError:
+                pass
+            except UnicodeEncodeError:
+                print row
+                raise
         unique_rows = []
 
         for row in data_to_write:
@@ -200,4 +207,4 @@ def process_cla_volume(infile, mode = 'csv'):
     print 'COMPLETED'
 
 if __name__ == '__main__':
-    process_cla_volume('Complete CLA Database.csv', mode = 'csv')
+    process_cla_volume('Complete CLA Database.tsv', mode = 'csv')

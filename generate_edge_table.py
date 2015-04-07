@@ -24,7 +24,7 @@ def load(infile):
     ----------
     infile : name of file to import.
     """
-    with open(infile,'rU') as inf:
+    with open(infile, 'rU') as inf:
         return [line for line in csv.reader(inf)][1:]
 
 def find_node_uid(candidate_node, node_database):
